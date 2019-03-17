@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.40629.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Iterator", "Iterator\Iterator.csproj", "{700620CA-C692-4CD4-8166-ABFE65B2F054}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EnumeratorAndEnumerable", "EnumeratorAndEnumerable\EnumeratorAndEnumerable.csproj", "{592245A6-DBAF-4734-88EF-9FA1200DE8B9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SystemCollections", "SystemCollections\SystemCollections.csproj", "{0B31970B-F7C3-4CEF-9901-259C65395BD6}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{700620CA-C692-4CD4-8166-ABFE65B2F054}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{700620CA-C692-4CD4-8166-ABFE65B2F054}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{700620CA-C692-4CD4-8166-ABFE65B2F054}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{700620CA-C692-4CD4-8166-ABFE65B2F054}.Release|Any CPU.Build.0 = Release|Any CPU
+		{592245A6-DBAF-4734-88EF-9FA1200DE8B9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{592245A6-DBAF-4734-88EF-9FA1200DE8B9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{592245A6-DBAF-4734-88EF-9FA1200DE8B9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{592245A6-DBAF-4734-88EF-9FA1200DE8B9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0B31970B-F7C3-4CEF-9901-259C65395BD6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0B31970B-F7C3-4CEF-9901-259C65395BD6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0B31970B-F7C3-4CEF-9901-259C65395BD6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0B31970B-F7C3-4CEF-9901-259C65395BD6}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
