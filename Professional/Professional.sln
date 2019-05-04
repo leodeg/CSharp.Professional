@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28307.489
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28803.352
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Iterator", "Iterator\Iterator.csproj", "{700620CA-C692-4CD4-8166-ABFE65B2F054}"
 EndProject
@@ -32,6 +32,16 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FunctionalProgramming", "FunctionalProgramming\FunctionalProgramming.csproj", "{62304937-CD0E-4CAE-B2E4-1E28DA068370}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Events", "Events\Events.csproj", "{6F4EE80D-A86C-4B96-AB30-81AD914A4409}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GenericsType", "GenericsType\GenericsType.csproj", "{5AC996F9-DCBF-43AE-BF60-88D52F59ACB0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Interfaces", "Interfaces\Interfaces.csproj", "{09601D4A-17B9-42CA-B7E2-AA7F6BBC7D57}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EnumeratedTypesAndBitFlags", "EnumeratedTypesAndBitFlags\EnumeratedTypesAndBitFlags.csproj", "{6BFC47F3-8CFF-488A-9D8F-E1AA9A24E829}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Arrays", "Arrays\Arrays.csproj", "{2A958E50-0B57-4E01-A70B-E197AB29A8AF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Serialization", "Serialization\Serialization.csproj", "{2BFACBD0-D70F-4C5B-ACA6-DC9C41C1448E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -99,6 +109,26 @@ Global
 		{6F4EE80D-A86C-4B96-AB30-81AD914A4409}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6F4EE80D-A86C-4B96-AB30-81AD914A4409}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6F4EE80D-A86C-4B96-AB30-81AD914A4409}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5AC996F9-DCBF-43AE-BF60-88D52F59ACB0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5AC996F9-DCBF-43AE-BF60-88D52F59ACB0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5AC996F9-DCBF-43AE-BF60-88D52F59ACB0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5AC996F9-DCBF-43AE-BF60-88D52F59ACB0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{09601D4A-17B9-42CA-B7E2-AA7F6BBC7D57}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{09601D4A-17B9-42CA-B7E2-AA7F6BBC7D57}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{09601D4A-17B9-42CA-B7E2-AA7F6BBC7D57}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{09601D4A-17B9-42CA-B7E2-AA7F6BBC7D57}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6BFC47F3-8CFF-488A-9D8F-E1AA9A24E829}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6BFC47F3-8CFF-488A-9D8F-E1AA9A24E829}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6BFC47F3-8CFF-488A-9D8F-E1AA9A24E829}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6BFC47F3-8CFF-488A-9D8F-E1AA9A24E829}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2A958E50-0B57-4E01-A70B-E197AB29A8AF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2A958E50-0B57-4E01-A70B-E197AB29A8AF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2A958E50-0B57-4E01-A70B-E197AB29A8AF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2A958E50-0B57-4E01-A70B-E197AB29A8AF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2BFACBD0-D70F-4C5B-ACA6-DC9C41C1448E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2BFACBD0-D70F-4C5B-ACA6-DC9C41C1448E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2BFACBD0-D70F-4C5B-ACA6-DC9C41C1448E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2BFACBD0-D70F-4C5B-ACA6-DC9C41C1448E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
