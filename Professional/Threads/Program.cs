@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Remoting.Messaging;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,7 +16,9 @@ namespace Threads
             //StartThreadJoining ();
             //RecursiveThreadCreator ();
             //ThreadAborting ();
-            StartMutex ();
+            //StartMutex ();
+            //ThreadPoolCallAsync ();
+            ThreadPoolExecutionContext ();
         }
 
         #region Use Thread
@@ -199,6 +202,37 @@ namespace Threads
 
             Console.WriteLine ("Thread {0} came out from the private field.", Thread.CurrentThread.Name);
             mutex.ReleaseMutex ();
+        }
+
+        #endregion
+
+        #region ThreadPool
+
+        public static void ThreadPoolCallAsync ()
+        {
+            Console.WriteLine ("Main thread: quiring an aync operation");
+            ThreadPool.QueueUserWorkItem (ComputeBoundOp, 5);
+
+            Console.WriteLine ("Main thread: Doing other work...");
+            Thread.Sleep (500);
+
+            Console.WriteLine ("Hit <Any Key> to end this program...");
+        }
+
+        private static void ComputeBoundOp (object state)
+        {
+            Console.WriteLine ("Is ComputeBoundOp: state={0}", state);
+        }
+
+        public static void ThreadPoolExecutionContext ()
+        {
+            CallContext.LogicalSetData ("Name", "LeoDeg");
+            ThreadPool.QueueUserWorkItem (state => Console.WriteLine ("Name= {0}", CallContext.LogicalGetData ("Name")));
+
+            ExecutionContext.SuppressFlow ();
+            ThreadPool.QueueUserWorkItem (state => Console.WriteLine ("Name= {0}", CallContext.LogicalGetData ("Name")));
+
+            ExecutionContext.RestoreFlow ();
         }
 
         #endregion
