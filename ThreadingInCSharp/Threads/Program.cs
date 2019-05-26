@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Threads
 {
@@ -10,7 +11,10 @@ namespace Threads
         {
             //Thread_CreateThread ();
             //ThreadIsDoneTest.Start ();
-            Thread_Name ();
+            //Thread_Name ();
+            //ThreadPool_Entering ();
+            //AsyncDelegate ();
+            Thread_Wait ();
         }
 
         private static void Thread_CreateThread ()
@@ -32,11 +36,26 @@ namespace Threads
                 Console.WriteLine ("Easy-peasy!");
             }).Start ();
 
-            new Thread (delegate()
+            new Thread (delegate ()
             {
                 Console.WriteLine ("Create another thread");
                 Console.WriteLine ("Easy-peasy!");
             }).Start ();
+        }
+
+        private static void Thread_Wait ()
+        {
+            string text = "text1";
+            Thread first = new Thread (() => Console.WriteLine (text));
+            first.Start ();
+
+            text = "text2";
+            Thread second = new Thread (() => Console.WriteLine (text));
+            second.Start ();
+
+            // output: 
+            // text2
+            // text2
         }
 
         public static void Thread_Name ()
@@ -45,19 +64,31 @@ namespace Threads
             Thread worker = new Thread (() => Console.WriteLine ("Do something, thread Name: {0}", Thread.CurrentThread.Name));
             worker.Name = "Worker";
             worker.Start ();
-            Console.WriteLine ("Do Something, thread Name: {0}", Thread.CurrentThread.Name );
+            Console.WriteLine ("Do Something, thread Name: {0}", Thread.CurrentThread.Name);
         }
 
-        public static void Thread_BackgroundAndForegroundThreads ()
+        public static void ThreadPool_Entering ()
         {
+            Task newTask = Task.Factory.StartNew (() => Console.WriteLine ("Start from task pool"));
+            newTask.Wait ();
+        }
 
+        public static void AsyncDelegate ()
+        {
+            Func<string, int> method = (string s) => s.Length;
+            IAsyncResult cookie = method.BeginInvoke ("test", null, null);
+
+            // Do something in parallel...
+
+            int result = method.EndInvoke (cookie);
+            Console.WriteLine ("String length is: {0}", result);
         }
     }
 
-    class ThreadIsDoneTest
+    internal class ThreadIsDoneTest
     {
-        static bool isDone;
-        static readonly object locker = new object ();
+        private static bool isDone;
+        private static readonly object locker = new object ();
 
         public static void Start ()
         {
