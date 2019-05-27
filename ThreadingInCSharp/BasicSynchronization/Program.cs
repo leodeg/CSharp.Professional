@@ -20,7 +20,11 @@ namespace BasicSynchronization
             //new AutoLockTest ().Start ();
             //AutoLockTest2.Start ();
             //Deadlock.Start ();
-            BGWorker.Start ();
+            //BGWorker.Start ();
+            //RulyCancelerTest.Start ();
+            //new Nonblocking ().Start ();
+            //SimpleWaitPulse.Start ();
+            ProducerConsumerQueueWithPulse.Start ();
         }
 
         public static void ProducerConsumerQueueStart ()
@@ -312,7 +316,7 @@ namespace BasicSynchronization
 
         private static void DoWork (object sender, DoWorkEventArgs e)
         {
-            for (int i = 0; i <= 100; i+=20)
+            for (int i = 0; i <= 100; i += 20)
             {
                 if (BackgroundWorker.CancellationPending)
                 {
@@ -339,6 +343,206 @@ namespace BasicSynchronization
             else if (e.Error != null)
                 Console.WriteLine ("Worker Exception: {0}", e.Error.ToString ());
             else Console.WriteLine ("Completed Result: {0}", e.Result);
+        }
+    }
+
+    #endregion
+
+    #region Safe Cancellation
+
+    internal class RulyCanceler
+    {
+        private object cancelLocker = new object ();
+        private bool cancelRequest;
+
+        public bool IsCacellationRequested
+        {
+            get { lock (cancelLocker) return cancelRequest; }
+        }
+
+        public void Cancel ()
+        {
+            lock (cancelLocker)
+                cancelRequest = true;
+        }
+
+        public void ThrowIfCancellationRequested ()
+        {
+            if (IsCacellationRequested)
+                throw new OperationCanceledException ();
+        }
+    }
+
+    internal class RulyCancelerTest
+    {
+        public static void Start ()
+        {
+            RulyCanceler canceler = new RulyCanceler ();
+            new Thread (() =>
+            {
+                try { DoWork (canceler); }
+                catch (OperationCanceledException ex)
+                { Console.WriteLine ("Canceled!"); }
+            }).Start ();
+
+            Thread.Sleep (1000);
+            canceler.Cancel ();
+        }
+
+        private static void DoWork (RulyCanceler canceler)
+        {
+            while (true)
+            {
+                canceler.ThrowIfCancellationRequested ();
+                try { OtherMethod (canceler); }
+                finally { /* cleanup */ }
+            }
+        }
+
+        private static void OtherMethod (RulyCanceler canceler)
+        {
+            canceler.ThrowIfCancellationRequested ();
+        }
+    }
+
+    #endregion
+
+    #region Nonblocking Synchronization
+
+    internal class Nonblocking
+    {
+        private int answer;
+        private bool complete;
+
+        public void Start ()
+        {
+            DoSomething ();
+            DoSomethingElse ();
+        }
+
+        private void DoSomething ()
+        {
+            answer = 123;
+            Thread.MemoryBarrier ();
+            complete = true;
+            Thread.MemoryBarrier ();
+        }
+
+        private void DoSomethingElse ()
+        {
+            Thread.MemoryBarrier ();
+            if (complete)
+            {
+                Thread.MemoryBarrier ();
+                Console.WriteLine (answer);
+            }
+        }
+    }
+
+    #endregion
+
+    #region Wait Pulse
+
+    internal class SimpleWaitPulse
+    {
+        private static readonly object locker = new object ();
+        private static bool go;
+
+        public static void Start ()
+        {
+            new Thread (Work).Start ();
+            Console.ReadLine ();
+
+            lock (locker)
+            {
+                go = true;
+                Monitor.Pulse (locker);
+            }
+        }
+
+        private static void Work ()
+        {
+            lock (locker)
+                while (!go)
+                    Monitor.Wait (locker);
+
+            Console.WriteLine ("Done!!!");
+        }
+    }
+
+    #endregion
+
+    #region Producer/Consumer Queue
+
+    internal class ProducerConsumerQueueWithPulse
+    {
+        private Thread[] workers;
+        private readonly object locker = new object ();
+        private Queue<Action> itemQueue = new Queue<Action> ();
+
+        public static void Start ()
+        {
+            var queue = new ProducerConsumerQueueWithPulse (2);
+            Console.WriteLine ("Enqueuing 10 items...");
+
+            for (int i = 0; i < 10; i++)
+            {
+                int itemNumber = i;
+                queue.EnqueueItem (() =>
+                {
+                    Thread.Sleep (1000);
+                    Console.WriteLine ("Task: {0}", itemNumber);
+                });
+            }
+
+            queue.Shutdown (true);
+            Console.WriteLine ();
+            Console.WriteLine ("Workers complete!");
+        }
+
+        public ProducerConsumerQueueWithPulse (int workerCount)
+        {
+            workers = new Thread[workerCount];
+
+            for (int i = 0; i < workerCount; i++)
+                (workers[i] = new Thread (Consume)).Start ();
+        }
+
+        public void Shutdown (bool waitForWorkers)
+        {
+            foreach (Thread worker in workers)
+                EnqueueItem (null);
+
+            if (waitForWorkers)
+                foreach (Thread worker in workers)
+                    worker.Join ();
+        }
+
+        public void EnqueueItem (Action item)
+        {
+            lock (locker)
+            {
+                itemQueue.Enqueue (item);
+                Monitor.Pulse (locker);
+            }
+        }
+
+        private void Consume ()
+        {
+            while (true)
+            {
+                Action item;
+                lock (locker)
+                {
+                    while (itemQueue.Count == 0)
+                        Monitor.Wait (locker);
+                    item = itemQueue.Dequeue ();
+                }
+
+                if (item == null)
+                    return;
+                item ();
+            }
         }
     }
 
