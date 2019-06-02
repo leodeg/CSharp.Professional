@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.Remoting.Contexts;
 using System.Text;
@@ -10,6 +11,9 @@ namespace BasicSynchronization
 {
     internal class Program
     {
+        public delegate int BinaryOperation (int data, int time);
+        private static AutoResetEvent waitHandle = new AutoResetEvent (false);
+
         private static void Main (string[] args)
         {
             //ThreadSafe.Start ();
@@ -24,7 +28,19 @@ namespace BasicSynchronization
             //RulyCancelerTest.Start ();
             //new Nonblocking ().Start ();
             //SimpleWaitPulse.Start ();
-            ProducerConsumerQueueWithPulse.Start ();
+            //ProducerConsumerQueueWithPulse.Start ();
+            //IAsyncResultExample ();
+            //IAsyncCallbackExample ();
+            //ThreadInfoExample ();
+            AutoResetEventExample ();
+        }
+
+        public static void ThreadInfoExample ()
+        {
+            Console.WriteLine ("Information about current program.");
+            Thread thread = Thread.CurrentThread;
+            thread.Name = "CurrentThread";
+            Console.WriteLine ("Domain name: {0}\nContext ID: {1} \nThread name: {2} \nIsAlive: {3} \nThread priority: {4} \nThread state: {5}", Thread.GetDomain ().FriendlyName, Thread.CurrentContext.ContextID, thread.Name, thread.IsAlive, thread.Priority, thread.ThreadState);
         }
 
         public static void ProducerConsumerQueueStart ()
@@ -36,6 +52,92 @@ namespace BasicSynchronization
                     queue.EnqueueTask ("Say: " + i);
                 queue.EnqueueTask ("Goodbye!");
             }
+        }
+
+        public static void IAsyncResultExample ()
+        {
+            Console.WriteLine ("Sync method call:");
+            DelegateThread (1, 3000);
+
+            Console.WriteLine ("\nAsync method call:");
+            BinaryOperation binaryOp = DelegateThread;
+            IAsyncResult asyncResult = binaryOp.BeginInvoke (1, 3000, null, null);
+            while (!asyncResult.IsCompleted)
+            {
+                Console.Write (".");
+                Thread.Sleep (50);
+            }
+
+            int result = binaryOp.EndInvoke (asyncResult);
+            Console.WriteLine ("\nResult: {0}", result);
+            Console.ReadLine ();
+        }
+
+        private static int DelegateThread (int data, int delay)
+        {
+            Console.WriteLine ("Delegate Thread was started!");
+            Thread.Sleep (delay);
+            Console.WriteLine ("Delegate Thread was completed!");
+            return ++data;
+        }
+
+        public static void IAsyncCallbackExample ()
+        {
+            Console.WriteLine ("Async call");
+            BinaryOperation binaryOperation = DelegateThread;
+
+            binaryOperation.BeginInvoke (1, 3000, TakesAWhileCompleted, binaryOperation);
+
+            for (int i = 0; i < 100; i++)
+            {
+                Console.Write (".");
+                Thread.Sleep (50);
+            }
+        }
+
+        private static void TakesAWhileCompleted (IAsyncResult ar)
+        {
+            if (ar == null) throw new ArgumentNullException ();
+
+            BinaryOperation binaryOperation = ar.AsyncState as BinaryOperation;
+            Trace.Assert (binaryOperation != null, "Wrong type.");
+            int result = binaryOperation.EndInvoke (ar);
+            Console.WriteLine ("Result: {0}", result);
+        }
+
+        public static void AutoResetEventExample ()
+        {
+            Console.WriteLine ("Main thread. ID: {0}", Thread.CurrentThread.ManagedThreadId);
+
+            Params param = new Params (10, 10);
+            Thread thread = new Thread (new ParameterizedThreadStart (Add));
+            Thread.Sleep (5);
+
+            waitHandle.WaitOne ();
+            Console.WriteLine ("All threads is completed");
+            Console.ReadLine ();
+        }
+
+        private static void Add (object obj)
+        {
+            if (obj is Params)
+            {
+                Console.WriteLine ("ID thread of method Add(): {0}", Thread.CurrentThread.ManagedThreadId);
+                Params param = (Params)obj;
+                Console.WriteLine ("{0} + {1} = {2}", param.a, param.b, param.a + param.b);
+                waitHandle.Set ();
+            }
+        }
+    }
+
+    internal class Params
+    {
+        public int a, b;
+
+        public Params (int a, int b)
+        {
+            this.a = a;
+            this.b = b;
         }
     }
 
