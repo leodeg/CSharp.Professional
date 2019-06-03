@@ -6,6 +6,7 @@ using System.Linq;
 using System.Runtime.Remoting.Contexts;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace BasicSynchronization
 {
@@ -32,7 +33,10 @@ namespace BasicSynchronization
             //IAsyncResultExample ();
             //IAsyncCallbackExample ();
             //ThreadInfoExample ();
-            AutoResetEventExample ();
+            //AutoResetEventExample ();
+            //SampleThread.Start ();
+            //ThreadSynchronization.Start ();
+            Clocks.StartTest ();
         }
 
         public static void ThreadInfoExample ()
@@ -310,6 +314,92 @@ namespace BasicSynchronization
         }
     }
 
+    #region Resources Contest
+
+    public class StateObject
+    {
+        private int state = 5;
+        private static readonly object locker = new object ();
+
+        public void ChangeState (int state)
+        {
+            if (state == 5)
+            {
+                this.state++;
+                Trace.Assert (this.state == 6, "Resources contest was arose after " + state + " loops");
+            }
+            state = 5;
+        }
+    }
+
+    public class SampleThread
+    {
+        public static void Start ()
+        {
+            var state = new StateObject ();
+            for (int i = 0; i < 20; i++)
+                new Task (new SampleThread ().RaceCondition, state).Start ();
+            Thread.Sleep (10000);
+        }
+
+        public void RaceCondition (object obj)
+        {
+            Trace.Assert (obj is StateObject, "obj must have type of StateObject");
+            StateObject state = obj as StateObject;
+            int i = 0;
+            while (true)
+            {
+                state.ChangeState (i++);
+            }
+        }
+    }
+
+    #endregion
+
+    #region Synchronization
+
+    public class ThreadSynchronization
+    {
+        private object threadLock = new object ();
+
+        public static void Start ()
+        {
+            var synchronization = new ThreadSynchronization ();
+            Thread[] threads = new Thread[10];
+
+            for (int i = 0; i < 10; i++)
+            {
+                threads[i] = new Thread (new ThreadStart (synchronization.ThreadNumber));
+                threads[i].Name = string.Format ("Working thread: #{0}", i);
+            }
+
+            foreach (Thread thread in threads)
+                thread.Start ();
+
+            Console.ReadLine ();
+        }
+
+        public void ThreadNumber ()
+        {
+            lock (threadLock)
+            {
+                Console.WriteLine ("{0} thread use method ThreadNumber", Thread.CurrentThread.Name);
+
+                Console.WriteLine ("Numbers:");
+                for (int i = 0; i < 10; i++)
+                {
+                    Random random = new Random ();
+                    Thread.Sleep (200 * random.Next (5));
+                    Console.Write (i + " ");
+                }
+
+                Console.WriteLine ();
+            }
+        }
+    }
+
+    #endregion
+
     #region Synchronization Context
 
     [Synchronization]
@@ -569,6 +659,92 @@ namespace BasicSynchronization
                     Monitor.Wait (locker);
 
             Console.WriteLine ("Done!!!");
+        }
+    }
+
+    internal class TickTock
+    {
+        private object locker = new object ();
+
+        public void Tick (bool running)
+        {
+            lock (locker)
+            {
+                if (!running)
+                {
+                    // Stop clock
+                    Monitor.Pulse (locker);
+                    return;
+                }
+
+                Console.Write ("Tick ");
+                // Start Tock method
+                Monitor.Pulse (locker);
+                // Wait completed of Tock method
+                Monitor.Wait (locker);
+            }
+        }
+
+        public void Tock (bool running)
+        {
+            lock (locker)
+            {
+                if (!running)
+                {
+                    // Stop clock
+                    Monitor.Pulse (locker);
+                    return;
+                }
+
+                Console.WriteLine ("Tock ");
+                // Start Tick method
+                Monitor.Pulse (locker);
+                // Wait completed of Tick method
+                Monitor.Wait (locker);
+            }
+        }
+    }
+
+    internal class Clocks
+    {
+        public Thread thread;
+        TickTock clocks;
+
+        public Clocks (string threadName, TickTock tickTock)
+        {
+            thread = new Thread (this.Run);
+            clocks = tickTock;
+            thread.Name = threadName;
+            thread.Start ();
+        }
+
+        private void Run ()
+        {
+            if (thread.Name == "Tick")
+            {
+                for (int i = 0; i < 5; i++)
+                    clocks.Tick (true);
+                clocks.Tick (false);
+            }
+            else
+            {
+                for (int i = 0; i < 5; i++)
+                    clocks.Tock (true);
+                clocks.Tock (false);
+            }
+        }
+
+        public static void StartTest ()
+        {
+            TickTock tickTock = new TickTock ();
+            Clocks tick = new Clocks ("Tick", tickTock);
+            Clocks tock = new Clocks ("Tock", tickTock);
+
+            tick.thread.Join ();
+            tock.thread.Join ();
+
+            Console.WriteLine ("The clocks was stopped.");
+            Console.ReadLine ();
         }
     }
 
