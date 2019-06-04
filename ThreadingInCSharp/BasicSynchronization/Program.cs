@@ -36,7 +36,13 @@ namespace BasicSynchronization
             //AutoResetEventExample ();
             //SampleThread.Start ();
             //ThreadSynchronization.Start ();
-            Clocks.StartTest ();
+            //Clocks.StartTest ();
+            //SharedResources.StartTest ();
+            //ManualResetEventExample.StartTest ();
+            //DataController.StartTest ();
+            //AbortExample.StartTest ();
+            //TimerExample.StartTest ();
+            ThreadsPoolExample.StartTest ();
         }
 
         public static void ThreadInfoExample ()
@@ -708,7 +714,7 @@ namespace BasicSynchronization
     internal class Clocks
     {
         public Thread thread;
-        TickTock clocks;
+        private TickTock clocks;
 
         public Clocks (string threadName, TickTock tickTock)
         {
@@ -820,6 +826,317 @@ namespace BasicSynchronization
                 if (item == null)
                     return;
                 item ();
+            }
+        }
+    }
+
+    #endregion
+
+    #region Mutex and Semaphore
+
+    internal class SharedResources
+    {
+        public static int Count;
+        public static Mutex mutex = new Mutex ();
+
+        public static void StartTest ()
+        {
+            var incrementThread = new IncrementThread ("Increment Thread", 5);
+            Thread.Sleep (1);
+            var decrementThread = new DecrementThread ("Decrement Thread", 5);
+
+            incrementThread.thread.Join ();
+            decrementThread.thread.Join ();
+
+            Console.ReadLine ();
+        }
+    }
+
+    internal class IncrementThread
+    {
+        private int number;
+        public Thread thread;
+
+        public IncrementThread (string threadName, int number)
+        {
+            thread = new Thread (this.Run);
+            this.number = number;
+            thread.Name = threadName;
+            thread.Start ();
+        }
+
+        private void Run ()
+        {
+            Console.WriteLine (thread.Name + " wait mutex");
+            SharedResources.mutex.WaitOne ();
+            Console.WriteLine (thread.Name + " get mutex");
+
+            do
+            {
+                Thread.Sleep (500);
+                SharedResources.Count++;
+                Console.WriteLine ("In thread {0}, Count = {1}", thread.Name, SharedResources.Count);
+                --number;
+            } while (number > 0);
+
+            Console.WriteLine (thread.Name + " release mutex");
+            SharedResources.mutex.ReleaseMutex ();
+        }
+    }
+
+    internal class DecrementThread
+    {
+        private int number;
+        public Thread thread;
+
+        public DecrementThread (string threadName, int number)
+        {
+            thread = new Thread (this.Run);
+            this.number = number;
+            thread.Name = threadName;
+            thread.Start ();
+        }
+
+        private void Run ()
+        {
+            Console.WriteLine (thread.Name + " wait mutex");
+            SharedResources.mutex.WaitOne ();
+            Console.WriteLine (thread.Name + " get mutex");
+
+            do
+            {
+                Thread.Sleep (500);
+                SharedResources.Count--;
+                Console.WriteLine ("In thread {0}, Count = {1}", thread.Name, SharedResources.Count);
+                --number;
+            } while (number > 0);
+
+            Console.WriteLine (thread.Name + " release mutex");
+            SharedResources.mutex.ReleaseMutex ();
+        }
+    }
+
+    #endregion
+
+    #region Manual Reset Event
+
+    internal class ManualResetEventExample
+    {
+        public Thread thread;
+        private ManualResetEvent resetEvent;
+
+        public ManualResetEventExample (string threadName, ManualResetEvent e)
+        {
+            thread = new Thread (this.Run);
+            thread.Name = threadName;
+            resetEvent = e;
+            thread.Start ();
+        }
+
+        private void Run ()
+        {
+            Console.WriteLine ("Inside thread, Name: {0}", thread.Name);
+
+            for (int i = 0; i < 5; i++)
+            {
+                Console.WriteLine (thread.Name);
+                Thread.Sleep (500);
+            }
+
+            Console.WriteLine ("{0} is completed", thread.Name);
+            resetEvent.Set ();
+        }
+
+        public static void StartTest ()
+        {
+            ManualResetEvent e = new ManualResetEvent (false);
+            var resetEvent = new ManualResetEventExample ("Thread 1", e);
+            Console.WriteLine ("Main thread wait event.");
+
+            e.WaitOne ();
+            Console.WriteLine ();
+            Console.WriteLine ("Main thread get event from first thread.");
+            e.Reset ();
+
+            Console.WriteLine ();
+            var resetEvent2 = new ManualResetEventExample ("Thread 2", e);
+            e.WaitOne ();
+            Console.WriteLine ();
+            Console.WriteLine ("Main thread get event from second thread.");
+        }
+    }
+
+    #endregion
+
+    #region Barrier
+
+    internal class DataController
+    {
+        public static void StartTest ()
+        {
+            const int numberTasks = 2;
+            const int partitionSize = 1000000;
+            var data = new List<string> (FillData (partitionSize * numberTasks));
+            var barrier = new Barrier (numberTasks + 1);
+
+            var taskFactory = new TaskFactory ();
+            var tasks = new Task<int[]>[numberTasks];
+
+            for (int i = 0; i < numberTasks; i++)
+            {
+                tasks[i] = taskFactory.StartNew<int[]> (CalculationInTask, Tuple.Create (i, partitionSize, barrier, data));
+            }
+
+            barrier.SignalAndWait ();
+            var resultCollection = tasks[0].Result.Zip (tasks[1].Result, (c1, c2) => { return c1 + c2; });
+
+            char character = 'a';
+            int sum = 0;
+        }
+
+        public static IEnumerable<string> FillData (int size)
+        {
+            List<string> data = new List<string> (size);
+            Random random = new Random ();
+            for (int i = 0; i < size; i++)
+                data.Add (GetString (random));
+            return data;
+        }
+
+        private static string GetString (Random random)
+        {
+            StringBuilder stringBuilder = new StringBuilder (6);
+            for (int i = 0; i < 6; i++)
+                stringBuilder.Append ((char)(random.Next (26) + 97));
+            return stringBuilder.ToString ();
+        }
+
+        private static int[] CalculationInTask (object obj)
+        {
+            var tuple = obj as Tuple<int, int, Barrier, List<string>>;
+            Barrier barrier = tuple.Item3;
+            List<string> data = tuple.Item4;
+
+            int start = tuple.Item1 * tuple.Item2;
+            int end = start + tuple.Item2;
+
+            Console.WriteLine ("Task {0}: start - {1}; end - {2}", Task.CurrentId, start, end);
+
+            int[] charCount = new int[26];
+            for (int i = start; i < end; i++)
+            {
+                char character = data[i][0];
+                charCount[character - 97]++;
+            }
+
+            Console.WriteLine ();
+            Console.WriteLine ("Task was completed.");
+            Console.WriteLine ("Task {0} was completed. {1} first a, {2} second z",
+               Task.CurrentId, charCount[0], charCount[25]);
+            barrier.RemoveParticipant ();
+            Console.WriteLine ("Task {0} was deleted; number of remaining participants: {1}",
+                Task.CurrentId, barrier.ParticipantsRemaining);
+
+            return charCount;
+        }
+    }
+
+    #endregion
+
+    #region Abort
+
+    internal class AbortExample
+    {
+        int number;
+        public Thread thread;
+
+        public AbortExample (string threadName)
+        {
+            thread = new Thread (this.Run);
+            thread.Name = threadName;
+            thread.Start ();
+        }
+
+        public static void StartTest ()
+        {
+            AbortExample abortExample = new AbortExample ("AbortExample");
+
+            Thread.Sleep (1000);
+            Console.WriteLine ("Abort of the thread");
+
+            abortExample.thread.Abort ();
+            abortExample.thread.Join ();
+
+            Console.WriteLine ("Base thread was aborted");
+        }
+
+        private void Run ()
+        {
+            Console.WriteLine ("{0} was started.", thread.Name);
+
+            for (int i = 1; i <= 1000; i++)
+            {
+                Console.Write (i + " ");
+                if ((i % 10) == 0)
+                {
+                    Console.WriteLine ();
+                    Thread.Sleep (250);
+                }
+            }
+
+            Console.WriteLine ("{0} was completed.", thread.Name);
+        }
+    }
+
+    #endregion
+
+    #region Timer
+
+    class TimerExample
+    {
+        private static void PrintTime (object state)
+        {
+            Console.Clear ();
+            Console.WriteLine ("Current time: {0}", DateTime.Now.ToLongTimeString ());
+        }
+
+        public static void StartTest ()
+        {
+            TimerCallback timerCallback = new TimerCallback (PrintTime);
+            Timer timer = new Timer (timerCallback, null, 0, 1000);
+
+            Console.WriteLine ("Press <any key> to exit.");
+            Console.ReadLine ();
+        }
+    }
+
+    #endregion
+
+    #region CLR Pool of threads
+
+    class ThreadsPoolExample
+    {
+        public static void StartTest ()
+        {
+            int workerThreads;
+            int completionThreads;
+            ThreadPool.GetMaxThreads (out workerThreads, out completionThreads);
+
+            Console.WriteLine ("Max amount of threads: {0}", workerThreads);
+            Console.WriteLine ("Input/output is available: {0}", completionThreads);
+
+            for (int i = 0; i < 5; i++)
+                ThreadPool.QueueUserWorkItem (JobForAThread);
+            Thread.Sleep (3000);
+            Console.ReadLine ();
+        }
+
+        private static void JobForAThread (object state)
+        {
+            for (int i = 0; i < 3; i++)
+            {
+                Console.WriteLine ("loop {0}, working inside thread from threads pool {1}", i, Thread.CurrentThread.ManagedThreadId);
+                Thread.Sleep (50);
             }
         }
     }
