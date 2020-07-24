@@ -12,14 +12,14 @@ namespace Threads
     {
         private static void Main (string[] args)
         {
-            //UseThread ();
-            //StartThreadJoining ();
-            //RecursiveThreadCreator ();
-            //ThreadAborting ();
-            //StartMutex ();
-            //ThreadPoolCallAsync ();
-            ThreadPoolExecutionContext ();
-        }
+			UseThread();
+			//StartThreadJoining ();
+			//RecursiveThreadCreator ();
+			//ThreadAborting ();
+			//StartMutex ();
+			//ThreadPoolCallAsync ();
+			//ThreadPoolExecutionContext ();
+		}
 
         #region Use Thread
 
